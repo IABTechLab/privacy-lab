@@ -1,1 +1,5 @@
-faker~=37.4.2
+jupyterlab~=4.4
+notebook~=7.4
+faker~=37.4
+pandas~=2.3
+pailliers~=0.2
