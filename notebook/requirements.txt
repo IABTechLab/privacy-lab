@@ -8,3 +8,4 @@ pandas~=2.3
 polars==1.12.0
 opendp==0.13.0
 pailliers~=0.2
+pyarrow~=21.0
