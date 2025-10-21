@@ -1,0 +1,11 @@
+fastapi>=0.100.0
+uvicorn[standard]>=0.20.0
+pydantic>=2.0.0
+faker>=20.0.0
+pandas>=2.0.0
+polars==1.32.0
+opendp>=0.11.0
+pailliers>=0.2.0
+anjana>=1.0.0
+numpy>=1.24.0
+pyarrow>=15.0.0
