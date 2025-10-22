@@ -1,0 +1,53 @@
+logsBucket: "gs://$_BUILD_LOGS_BUCKET"
+
+steps:
+  # 1️⃣ Clone the specific branch from GitHub
+  - name: 'gcr.io/cloud-builders/git'
+    args:
+      [
+        'clone',
+        '--branch', '$_BRANCH_NAME',
+        '--single-branch',
+        'https://$_GITHUB_ACCESS_TOKEN@github.com/$_REPO_OWNER/$_REPO_NAME.git',
+        'privacy-lab-workspace'
+      ]
+    id: 'clone'
+
+  # 2️⃣ Build Docker image for FastAPI app
+  - name: 'gcr.io/cloud-builders/docker'
+    dir: 'privacy-lab-workspace'
+    args:
+      [
+        'build',
+        '-t', 'gcr.io/$PROJECT_ID/privacy-lab-api',
+        '.'
+      ]
+    id: 'build'
+    waitFor: ['clone']
+
+  # 3️⃣ Push Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/privacy-lab-api']
+    id: 'push'
+    waitFor: ['build']
+
+  # 4️⃣ Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      [
+        'run', 'deploy', 'privacy-lab-api',
+        '--image', 'gcr.io/$PROJECT_ID/privacy-lab-api',
+        '--region', 'asia-south1',
+        '--platform', 'managed',
+        '--allow-unauthenticated'
+      ]
+    id: 'deploy'
+    waitFor: ['push']
+
+# 5️⃣ Optional: specify images (shows in Cloud Build dashboard)
+images:
+  - 'gcr.io/$PROJECT_ID/privacy-lab-api'
+
+# 6️⃣ Configure timeout and resources
+timeout: '900s'
