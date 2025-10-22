@@ -27,7 +27,7 @@ steps:
 
   # 3️⃣ Push Docker image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$_PROJECT_ID/privacy-lab-api']
+    args: ['push', 'us-central1-docker.pkg.dev/$_PROJECT_ID/privacy-lab-repo']
     id: 'push'
     waitFor: ['build']
 
