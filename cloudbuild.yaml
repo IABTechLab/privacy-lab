@@ -1,7 +1,7 @@
 logsBucket: "gs://$_BUILD_LOGS_BUCKET"
 
 steps:
-  # 1️⃣ Clone the specific branch from GitHub
+  # 1️⃣ Clone repo
   - name: 'gcr.io/cloud-builders/git'
     args:
       [
@@ -19,26 +19,30 @@ steps:
     args:
       [
         'build',
-        '-t', 'us-central1-docker.pkg.dev/$_PROJECT_ID/privacy-lab-repo',
+        '-t', 'us-central1-docker.pkg.dev/$_PROJECT_ID/privacy-lab-repo/privacy-lab-api:latest',
         '-f', 'Dockerfile',
         '.'
       ]
     id: 'build'
     waitFor: ['clone']
 
-  # 3️⃣ Push Docker image to Artifact Registry
+  # 3️⃣ Push Docker image to Artifact Registry (same tag!)
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'us-central1-docker.pkg.dev/$_PROJECT_ID/privacy-lab-repo']
+    args:
+      [
+        'push',
+        'us-central1-docker.pkg.dev/$_PROJECT_ID/privacy-lab-repo/privacy-lab-api:latest'
+      ]
     id: 'push'
     waitFor: ['build']
 
-  # 4️⃣ Deploy to Cloud Run
-  - name: 'us-central1-docker.pkg.dev/$_PROJECT_ID/privacy-lab-repo'
+  # 4️⃣ Deploy to Cloud Run using that same image
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
       [
         'run', 'deploy', 'privacy-lab-api',
-        '--image', 'us-central1-docker.pkg.dev/$_PROJECT_ID/privacy-lab-repo',
+        '--image', 'us-central1-docker.pkg.dev/$_PROJECT_ID/privacy-lab-repo/privacy-lab-api:latest',
         '--region', 'us-central1',
         '--platform', 'managed',
         '--allow-unauthenticated'
@@ -46,9 +50,7 @@ steps:
     id: 'deploy'
     waitFor: ['push']
 
-# 5️⃣ Optional: specify images (shows in Cloud Build dashboard)
 images:
-  - 'us-central1-docker.pkg.dev/$_PROJECT_ID/privacy-lab-repo'
+  - 'us-central1-docker.pkg.dev/$_PROJECT_ID/privacy-lab-repo/privacy-lab-api:latest'
 
-# 6️⃣ Configure timeout and resources
 timeout: '900s'
