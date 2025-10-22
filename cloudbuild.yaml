@@ -38,7 +38,7 @@ steps:
       [
         'run', 'deploy', 'privacy-lab-api',
         '--image', 'us-central1-docker.pkg.dev/$_PROJECT_ID/privacy-lab-repo',
-        '--region', 'asia-south1',
+        '--region', 'us-central1',
         '--platform', 'managed',
         '--allow-unauthenticated'
       ]
