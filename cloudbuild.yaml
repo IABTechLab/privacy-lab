@@ -20,6 +20,7 @@ steps:
       [
         'build',
         '-t', 'us-central1-docker.pkg.dev/$_PROJECT_ID/privacy-lab-repo',
+        '-f', 'Dockerfile',
         '.'
       ]
     id: 'build'
