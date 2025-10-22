@@ -19,7 +19,7 @@ steps:
     args:
       [
         'build',
-        '-t', 'gcr.io/$_PROJECT_ID/privacy-lab-api',
+        '-t', 'us-central1-docker.pkg.dev/$_PROJECT_ID/privacy-lab-repo',
         '.'
       ]
     id: 'build'
@@ -32,12 +32,12 @@ steps:
     waitFor: ['build']
 
   # 4️⃣ Deploy to Cloud Run
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  - name: 'us-central1-docker.pkg.dev/$_PROJECT_ID/privacy-lab-repo'
     entrypoint: gcloud
     args:
       [
         'run', 'deploy', 'privacy-lab-api',
-        '--image', 'gcr.io/$_PROJECT_ID/privacy-lab-api',
+        '--image', 'us-central1-docker.pkg.dev/$_PROJECT_ID/privacy-lab-repo',
         '--region', 'asia-south1',
         '--platform', 'managed',
         '--allow-unauthenticated'
