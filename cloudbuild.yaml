@@ -47,7 +47,7 @@ steps:
 
 # 5️⃣ Optional: specify images (shows in Cloud Build dashboard)
 images:
-  - 'gcr.io/$_PROJECT_ID/privacy-lab-api'
+  - 'us-central1-docker.pkg.dev/$_PROJECT_ID/privacy-lab-repo'
 
 # 6️⃣ Configure timeout and resources
 timeout: '900s'
