@@ -1,0 +1,17 @@
+{
+    "k": 15,
+    "supp_level": 60,
+    "use_sample_data": false,
+    "events": [
+        {"space_id": 1, "email": "u1@test.com", "event_type": "click", "campaign": "Q4_2024", "region": "NA", "opt_out": false},
+        {"space_id": 1, "email": "u2@test.com", "event_type": "click", "campaign": "Q4_2024", "region": "NA", "opt_out": false},
+        {"space_id": 1, "email": "u3@test.com", "event_type": "click", "campaign": "Q4_2024", "region": "EMEA", "opt_out": false},
+        {"space_id": 1, "email": "u4@test.com", "event_type": "click", "campaign": "Q4_2024", "region": "EMEA", "opt_out": true},
+        {"space_id": 1, "email": "u5@test.com", "event_type": "click", "campaign": "Q4_2024", "region": "APAC", "opt_out": false}
+    ],
+    "conversions": [
+        {"space_id": 1, "email": "u1@test.com", "event_type": "Purchase"},
+        {"space_id": 1, "email": "u3@test.com", "event_type": "Purchase"},
+        {"space_id": 1, "email": "u5@test.com", "event_type": "Subscription"}
+    ]
+}

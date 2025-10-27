@@ -1,0 +1,4 @@
+space_id,email,event_type
+1,user1@example.com,Purchase
+1,user3@example.com,Subscription
+1,user5@example.com,Purchase

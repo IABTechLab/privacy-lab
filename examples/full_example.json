@@ -1,0 +1,24 @@
+{
+    "epsilon": 1.5,
+    "split_evenly_over": 6,
+    "use_sample_data": false,
+    "events": [
+        {"space_id": 1, "email": "user001@company.com", "event_type": "click", "campaign": "Holiday2024", "region": "NA", "opt_out": false},
+        {"space_id": 1, "email": "user002@company.com", "event_type": "click", "campaign": "Holiday2024", "region": "NA", "opt_out": false},
+        {"space_id": 1, "email": "user003@company.com", "event_type": "click", "campaign": "Holiday2024", "region": "EMEA", "opt_out": false},
+        {"space_id": 1, "email": "user004@company.com", "event_type": "click", "campaign": "Holiday2024", "region": "EMEA", "opt_out": true},
+        {"space_id": 1, "email": "user005@company.com", "event_type": "click", "campaign": "BackToSchool", "region": "APAC", "opt_out": false},
+        {"space_id": 1, "email": "user006@company.com", "event_type": "click", "campaign": "BackToSchool", "region": "APAC", "opt_out": false},
+        {"space_id": 1, "email": "user007@company.com", "event_type": "click", "campaign": "BackToSchool", "region": "LATAM", "opt_out": false},
+        {"space_id": 1, "email": "user008@company.com", "event_type": "click", "campaign": "SpringSale", "region": "LATAM", "opt_out": false},
+        {"space_id": 1, "email": "user009@company.com", "event_type": "click", "campaign": "SpringSale", "region": "ROW", "opt_out": true},
+        {"space_id": 1, "email": "user010@company.com", "event_type": "click", "campaign": "SpringSale", "region": "ROW", "opt_out": false}
+    ],
+    "conversions": [
+        {"space_id": 1, "email": "user001@company.com", "event_type": "Purchase"},
+        {"space_id": 1, "email": "user003@company.com", "event_type": "Purchase"},
+        {"space_id": 1, "email": "user005@company.com", "event_type": "Subscription"},
+        {"space_id": 1, "email": "user007@company.com", "event_type": "Purchase"},
+        {"space_id": 1, "email": "user010@company.com", "event_type": "Subscription"}
+    ]
+}

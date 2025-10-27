@@ -172,7 +172,8 @@ def differential_privacy_workflow(events, conversions, epsilon: float = 1.0, spl
     """
     dp.enable_features("contrib")
 
-    campaigns = ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple']
+    # Extract unique campaigns from actual event data
+    campaigns = list(set([event[3] for event in events]))  # event[3] is campaign
     join_dp = join_events_conversions(events, conversions)
 
     comparison = []
@@ -218,7 +219,8 @@ def homomorphic_encryption_workflow(events, conversions):
     Returns:
         Dictionary with encrypted and decrypted results
     """
-    campaigns = ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple']
+    # Extract unique campaigns from actual event data
+    campaigns = list(set([event[3] for event in events]))  # event[3] is campaign
 
     # Generate keys
     secret_key = pailliers.secret(128)
