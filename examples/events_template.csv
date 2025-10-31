@@ -1,0 +1,6 @@
+space_id,email,event_type,campaign,region,opt_out
+1,user1@example.com,click,Campaign1,NA,false
+1,user2@example.com,click,Campaign1,EMEA,false
+1,user3@example.com,click,Campaign2,APAC,true
+1,user4@example.com,click,Campaign2,LATAM,false
+1,user5@example.com,click,Campaign3,ROW,false

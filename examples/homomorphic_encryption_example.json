@@ -1,0 +1,14 @@
+{
+    "use_sample_data": false,
+    "events": [
+        {"space_id": 1, "email": "customer_001", "event_type": "click", "campaign": "BlackFriday", "region": "NA", "opt_out": false},
+        {"space_id": 1, "email": "customer_002", "event_type": "click", "campaign": "BlackFriday", "region": "NA", "opt_out": false},
+        {"space_id": 1, "email": "customer_003", "event_type": "click", "campaign": "CyberMonday", "region": "EMEA", "opt_out": false},
+        {"space_id": 1, "email": "customer_004", "event_type": "click", "campaign": "CyberMonday", "region": "APAC", "opt_out": true}
+    ],
+    "conversions": [
+        {"space_id": 1, "email": "customer_001", "event_type": "Purchase"},
+        {"space_id": 1, "email": "customer_002", "event_type": "Subscription"},
+        {"space_id": 1, "email": "customer_003", "event_type": "Purchase"}
+    ]
+}

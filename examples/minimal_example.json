@@ -1,0 +1,43 @@
+{
+    "epsilon": 1.0,
+    "split_evenly_over": 3,
+    "use_sample_data": false,
+    "events": [
+        {
+            "space_id": 1,
+            "email": "alice@example.com",
+            "event_type": "click",
+            "campaign": "TestCampaign",
+            "region": "NA",
+            "opt_out": false
+        },
+        {
+            "space_id": 1,
+            "email": "bob@example.com",
+            "event_type": "click",
+            "campaign": "TestCampaign",
+            "region": "EMEA",
+            "opt_out": false
+        },
+        {
+            "space_id": 1,
+            "email": "charlie@example.com",
+            "event_type": "click",
+            "campaign": "TestCampaign",
+            "region": "APAC",
+            "opt_out": true
+        }
+    ],
+    "conversions": [
+        {
+            "space_id": 1,
+            "email": "alice@example.com",
+            "event_type": "Purchase"
+        },
+        {
+            "space_id": 1,
+            "email": "charlie@example.com",
+            "event_type": "Subscription"
+        }
+    ]
+}
