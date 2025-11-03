@@ -83,6 +83,25 @@ def convert_conversions(conversions: List[Conversion]):
         for c in conversions
     ]
 
+def resolve_notebook_path(*subpaths):
+    """
+    Resolve a path to the notebook directory that works both locally and inside Docker.
+    Tries both ./notebook/... and ../notebook/... based on what's available.
+    """
+    base_dir = os.path.dirname(__file__)
+
+    # Try Docker path first (/app/notebook)
+    docker_path = os.path.abspath(os.path.join(base_dir, "notebook", *subpaths))
+    if os.path.exists(docker_path):
+        return docker_path
+
+    # Fallback for local development (../notebook)
+    local_path = os.path.abspath(os.path.join(base_dir, "..", "notebook", *subpaths))
+    if os.path.exists(local_path):
+        return local_path
+
+    # Return docker-style path if neither exists (for error reporting)
+    return docker_path
 
 @app.get("/")
 def read_root():
@@ -274,26 +293,24 @@ def get_sample_data_info(method: str):
                 detail="Method parameter must be either 'k-anonymity' or 'differential-privacy'"
             )
         
-        # Path to the notebook file
-        notebook_path = os.path.join(os.path.dirname(__file__), "../notebook/workflows.ipynb")
-        
-        # Read the notebook content
-        with open(notebook_path, 'r', encoding='utf-8') as f:
-            notebook_content = f.read()
-        
-        # Extract relevant content based on method
+        # Resolve the correct HTML file based on method
         if method == "k-anonymity":
-            # Return a user-provided HTML file (create ../notebook/k_anonymity.html)
-            html_file_path = os.path.join(os.path.dirname(__file__), "../notebook/k-anonymity.html")
-            with open(html_file_path, 'r', encoding='utf-8') as hf:
-                return HTMLResponse(content=hf.read(), status_code=200)
-            
-        elif method == "differential-privacy":
-            # Return a user-provided HTML file (create ../notebook/differential-privacy.html)
-            html_file_path = os.path.join(os.path.dirname(__file__), "../notebook/differential-privacy.html")
-            with open(html_file_path, 'r', encoding='utf-8') as hf:
-                return HTMLResponse(content=hf.read(), status_code=200)        
+            html_file_path = resolve_notebook_path("k-anonymity.html")
+        else:
+            html_file_path = resolve_notebook_path("differential-privacy.html")
         
+        # Verify the file exists
+        if not os.path.exists(html_file_path):
+            raise HTTPException(
+                status_code=404,
+                detail=f"Documentation file not found: {html_file_path}"
+            )
+
+        # Return the file content
+        with open(html_file_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+
+        return HTMLResponse(content=html_content, status_code=200)
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Notebook file not found")
     except Exception as e:
@@ -314,16 +331,11 @@ def get_walkthrough_info(method: str):
         )
 
     try:
-        # Define walkthrough folder path based on method
-        base_dir = os.path.dirname(__file__)
-        walkthrough_dir = os.path.join(base_dir, f"../notebook/walkthroughs/{method}")
+        # ✅ Works in both Docker and local setups
+        walkthrough_dir = resolve_notebook_path("walkthroughs", method)
 
-        # Ensure folder exists
         if not os.path.exists(walkthrough_dir):
-            raise HTTPException(
-                status_code=404,
-                detail=f"Walkthrough folder not found for method: {method}",
-            )
+            raise HTTPException(status_code=404, detail=f"Walkthrough folder not found: {walkthrough_dir}")
 
         # Collect all .html files (each file = 1 slide)
         html_files = [
