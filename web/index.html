@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Lab - Privacy-Enhancing Technologies</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Privacy Lab</h1>
+        <p>Explore Privacy-Enhancing Technologies in Digital Advertising</p>
+    </header>
+
+    <main>
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab(event, 'k-anonymity')">k-Anonymity</button>
+            <button class="tab-button" onclick="openTab(event, 'differential-privacy')">Differential Privacy</button>
+            <button class="tab-button" onclick="openTab(event, 'homomorphic-encryption')">Homomorphic Encryption</button>
+        </div>
+
+        <!-- k-Anonymity Tab -->
+        <div id="k-anonymity" class="tab-content active">
+            <h2>k-Anonymity Workflow</h2>
+            <p>Ensures each record is indistinguishable from at least k-1 other records by generalizing quasi-identifiers.</p>
+
+            <form id="k-anonymity-form">
+                <div class="form-group">
+                    <label for="k-value">k Parameter (1-100):</label>
+                    <input type="range" id="k-value" name="k" min="1" max="100" value="10">
+                    <span id="k-value-display">10</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="k-supp">Suppression Level (0-100):</label>
+                    <input type="range" id="k-supp" name="supp_level" min="0" max="100" value="50">
+                    <span id="k-supp-display">50</span>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="k-sample-data" name="use_sample_data" checked>
+                        Use sample data
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-primary">Run k-Anonymity</button>
+            </form>
+
+            <div id="k-anonymity-results" class="results"></div>
+        </div>
+
+        <!-- Differential Privacy Tab -->
+        <div id="differential-privacy" class="tab-content">
+            <h2>Differential Privacy Workflow</h2>
+            <p>Adds statistical noise to query results to provide mathematically rigorous privacy guarantees.</p>
+
+            <form id="dp-form">
+                <div class="form-group">
+                    <label for="epsilon-value">Epsilon (Privacy Loss) (0.1-10.0):</label>
+                    <input type="range" id="epsilon-value" name="epsilon" min="0.1" max="10.0" step="0.1" value="1.0">
+                    <span id="epsilon-value-display">1.0</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="split-over">Split Privacy Budget Over:</label>
+                    <input type="number" id="split-over" name="split_evenly_over" min="1" max="20" value="6">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="dp-sample-data" name="use_sample_data" checked>
+                        Use sample data
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-primary">Run Differential Privacy</button>
+            </form>
+
+            <div id="dp-results" class="results"></div>
+        </div>
+
+        <!-- Homomorphic Encryption Tab -->
+        <div id="homomorphic-encryption" class="tab-content">
+            <h2>Homomorphic Encryption Workflow</h2>
+            <p>Allows computation on encrypted data without decryption, providing input privacy.</p>
+
+            <form id="he-form">
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="he-sample-data" name="use_sample_data" checked>
+                        Use sample data
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-primary">Run Homomorphic Encryption</button>
+            </form>
+
+            <div id="he-results" class="results"></div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Privacy Lab - IAB Tech Lab | Based on ADMaP specification</p>
+    </footer>
+
+    <div id="loading" class="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p>Processing...</p>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
