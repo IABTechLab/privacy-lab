@@ -1,0 +1,121 @@
+<html>
+  <head> </head>
+  <body>
+    <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7a300759-7f3f-4466-9e39-4056b9c51c79">
+      <div class="jp-Cell-inputWrapper" tabindex="0">
+        <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser"></div>
+        <div class="jp-InputArea jp-Cell-inputArea">
+          <div class="jp-InputPrompt jp-InputArea-prompt"></div>
+          <div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+            <h3 id="Effect-of-Parameter-on-Results:-Walkthrough">
+              Effect of Parameter on Results: Walkthrough<a class="anchor-link" href="#Effect-of-Parameter-on-Results:-Walkthrough">¶</a>
+            </h3>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=da4c6195-d531-407c-8118-0b79a653ff71">
+      <div class="jp-Cell-inputWrapper" tabindex="0">
+        <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser"></div>
+        <div class="jp-InputArea jp-Cell-inputArea">
+          <div class="jp-InputPrompt jp-InputArea-prompt"></div>
+          <div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+            <p>
+              Keep moving the slider up to <em>k</em> = 10. Observe that the values in some columns (such as
+              <strong>user_data.address.region</strong>) are now completely redacted and appear as an asterisk (<em>i.e.</em>, the character
+              "*"). This indicates that no available way to bin values from that column into ranges is sufficient to ensure that every
+              combination of values appears in at least 10 rows.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8e9133fb-3c9e-4fbf-be89-2c1dd6120c92">
+      <div class="jp-Cell-inputWrapper" tabindex="0">
+        <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser"></div>
+        <div class="jp-InputArea jp-Cell-inputArea">
+          <div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
+          <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+            <div class="cm-editor cm-s-jupyter">
+              <div class="highlight hl-ipython3">
+                <pre><span></span><span class="n">display</span><span class="p">(</span><span class="n">workflow_ka</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="n">hierarchies</span><span class="p">,</span> <span class="n">data</span><span class="p">)[:</span><span class="mi">3</span><span class="p">])</span>
+</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="jp-Cell-outputWrapper">
+        <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser"></div>
+        <div class="jp-OutputArea jp-Cell-outputArea">
+          <div class="jp-OutputArea-child">
+            <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+            <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+              <div>
+                <style scoped="">
+                  .dataframe tbody tr th:only-of-type {
+                    vertical-align: middle;
+                  }
+
+                  .dataframe tbody tr th {
+                    vertical-align: top;
+                  }
+
+                  .dataframe thead th {
+                    text-align: right;
+                  }
+                </style>
+                <table border="1" class="dataframe">
+                  <thead>
+                    <tr style="text-align: right">
+                      <th></th>
+                      <th>index</th>
+                      <th>event_properties.promotion_name</th>
+                      <th>user_data.address.region</th>
+                      <th>user_data.opt_out</th>
+                      <th>event_type</th>
+                      <th>user_data.age</th>
+                      <th>user_data.sex</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th>0</th>
+                      <td>0</td>
+                      <td>*</td>
+                      <td>*</td>
+                      <td>True</td>
+                      <td>Subscription</td>
+                      <td>[30, 40]</td>
+                      <td>F</td>
+                    </tr>
+                    <tr>
+                      <th>1</th>
+                      <td>1</td>
+                      <td>*</td>
+                      <td>*</td>
+                      <td>False</td>
+                      <td>Purchase</td>
+                      <td>[40, 50]</td>
+                      <td>F</td>
+                    </tr>
+                    <tr>
+                      <th>2</th>
+                      <td>2</td>
+                      <td>*</td>
+                      <td>*</td>
+                      <td>True</td>
+                      <td>Purchase</td>
+                      <td>[50, 60]</td>
+                      <td>M</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

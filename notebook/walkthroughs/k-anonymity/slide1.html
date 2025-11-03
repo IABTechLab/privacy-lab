@@ -1,0 +1,128 @@
+<html>
+    <head>
+
+    </head>
+    <body>
+        <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7a300759-7f3f-4466-9e39-4056b9c51c79">
+        <div class="jp-Cell-inputWrapper" tabindex="0">
+          <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser"></div>
+          <div class="jp-InputArea jp-Cell-inputArea">
+            <div class="jp-InputPrompt jp-InputArea-prompt"></div>
+            <div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+              <h3 id="Effect-of-Parameter-on-Results:-Walkthrough">
+                Effect of Parameter on Results: Walkthrough<a class="anchor-link" href="#Effect-of-Parameter-on-Results:-Walkthrough">¶</a>
+              </h3>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8fad6064-dc3f-4cbc-82ce-2462c3d014d1">
+        <div class="jp-Cell-inputWrapper" tabindex="0">
+          <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser"></div>
+          <div class="jp-InputArea jp-Cell-inputArea">
+            <div class="jp-InputPrompt jp-InputArea-prompt"></div>
+            <div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+              <p>
+                Set the slider to <em>k</em> = 1 and note that even with <em>k</em>-anonymity, each user is a member of their own group of 1
+                and so each row has the exact attribute value in each column. Even if a row's particular combination of attribute values
+                never appears in another row (which means an individual user can be identified uniquely using that combination), that
+                combination of values is reproduced verbatim in the output.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=fe702f7c-99c6-469e-b08e-2e4784aaf36a">
+        <div class="jp-Cell-inputWrapper" tabindex="0">
+          <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser"></div>
+          <div class="jp-InputArea jp-Cell-inputArea">
+            <div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div>
+            <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+              <div class="cm-editor cm-s-jupyter">
+                <div class="highlight hl-ipython3">
+                  <pre><span></span><span class="n">display</span><span class="p">(</span><span class="n">workflow_ka</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="n">hierarchies</span><span class="p">,</span> <span class="n">data</span><span class="p">)[:</span><span class="mi">3</span><span class="p">])</span>
+</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="jp-Cell-outputWrapper">
+          <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser"></div>
+          <div class="jp-OutputArea jp-Cell-outputArea">
+            <div class="jp-OutputArea-child">
+              <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+              <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+                <pre>
+The data verifies k-anonymity with k=1
+</pre
+                >
+              </div>
+            </div>
+            <div class="jp-OutputArea-child">
+              <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+              <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+                <div>
+                  <style scoped="">
+                    .dataframe tbody tr th:only-of-type {
+                      vertical-align: middle;
+                    }
+
+                    .dataframe tbody tr th {
+                      vertical-align: top;
+                    }
+
+                    .dataframe thead th {
+                      text-align: right;
+                    }
+                  </style>
+                  <table border="1" class="dataframe">
+                    <thead>
+                      <tr style="text-align: right">
+                        <th></th>
+                        <th>event_properties.promotion_name</th>
+                        <th>user_data.address.region</th>
+                        <th>user_data.opt_out</th>
+                        <th>event_type</th>
+                        <th>user_data.age</th>
+                        <th>user_data.sex</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <th>0</th>
+                        <td>*</td>
+                        <td>ROW</td>
+                        <td>True</td>
+                        <td>Subscription</td>
+                        <td>34</td>
+                        <td>F</td>
+                      </tr>
+                      <tr>
+                        <th>1</th>
+                        <td>*</td>
+                        <td>LATAM</td>
+                        <td>False</td>
+                        <td>Purchase</td>
+                        <td>47</td>
+                        <td>F</td>
+                      </tr>
+                      <tr>
+                        <th>2</th>
+                        <td>*</td>
+                        <td>NA</td>
+                        <td>True</td>
+                        <td>Purchase</td>
+                        <td>55</td>
+                        <td>M</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+</html>
