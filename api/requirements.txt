@@ -9,3 +9,5 @@ pailliers>=0.2.0
 anjana>=1.0.0
 numpy>=1.24.0
 pyarrow>=15.0.0
+matplotlib>=3.8.0
+tqdm>=4.66.0

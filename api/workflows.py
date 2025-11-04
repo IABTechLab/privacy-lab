@@ -1,12 +1,19 @@
 """
 Privacy-enhancing technology workflows extracted from the notebook.
 """
+import io
+import base64
+import matplotlib
+matplotlib.use("Agg") 
+import matplotlib.pyplot as plt
 import random
+import time
 import numpy as np
 import pandas as pd
 import polars as pl
 import opendp.prelude as dp
 import anjana.anonymity
+from tqdm import tqdm
 import pailliers
 from typing import List, Dict, Any, Tuple
 
@@ -209,22 +216,54 @@ def differential_privacy_workflow(events, conversions, epsilon: float = 1.0, spl
 
 def homomorphic_encryption_workflow(events, conversions):
     """
-    Apply homomorphic encryption to conversion data.
+    Apply homomorphic encryption to conversion data and compare with reference workflow.
 
     Args:
         events: List of engagement events
         conversions: List of conversion events
 
     Returns:
-        Dictionary with encrypted and decrypted results
+        dict with decrypted results, comparison dataframe, and execution times
     """
     campaigns = ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple']
 
-    # Generate keys
-    secret_key = pailliers.secret(128)
+    # --------------------------
+    # 1. Reference (non-HE) workflow
+    # --------------------------
+    start_time_ref = time.perf_counter()
+
+    join_he_ref = [
+        [spaceid_e, type_e, campaign_e, type_c]
+        for (spaceid_e, key_e, type_e, campaign_e, region_e, opt_e) in events
+        for (spaceid_c, key_c, type_c) in conversions
+        if key_e == key_c
+    ]
+
+    aggregate_he_ref = [
+        [
+            campaign,
+            sum([
+                1
+                for (_, _, campaign_, event_type) in join_he_ref
+                if campaign == campaign_ and event_type == 'Purchase'
+            ])
+        ]
+        for campaign in campaigns
+    ]
+
+    end_time_ref = time.perf_counter()
+    ref_exec_time = end_time_ref - start_time_ref
+
+    print(f"Execution time in seconds of reference workflow: {ref_exec_time:.6f}")
+
+    # --------------------------
+    # 2. Homomorphic Encryption (HE) workflow
+    # --------------------------
+    secret_key = pailliers.secret(256)
     public_key = pailliers.public(secret_key)
 
-    # Encrypt conversions
+    start_time_he = time.perf_counter()
+
     conversions_enc = [
         [
             spaceid_c,
@@ -232,24 +271,16 @@ def homomorphic_encryption_workflow(events, conversions):
             pailliers.encrypt(public_key, 1 if event_type == 'Purchase' else 0),
             pailliers.encrypt(public_key, 1 if event_type == 'Subscription' else 0)
         ]
-        for (spaceid_c, key_c, event_type) in conversions
+        for (spaceid_c, key_c, event_type) in tqdm(conversions, desc="Encrypting conversions")
     ]
 
-    # Join with events
     join_he = [
-        [
-            spaceid_e,
-            type_e,
-            campaign_e,
-            count_p,
-            count_s
-        ]
-        for (spaceid_e, key_e, type_e, campaign_e, region_e, opt_e) in events
+        [spaceid_e, type_e, campaign_e, count_p, count_s]
+        for (spaceid_e, key_e, type_e, campaign_e, region_e, age_e) in events
         for (spaceid_c, key_c, count_p, count_s) in conversions_enc
         if key_e == key_c
     ]
 
-    # Aggregate (encrypted)
     aggregate_he_enc = [
         [
             campaign,
@@ -262,7 +293,6 @@ def homomorphic_encryption_workflow(events, conversions):
         for campaign in campaigns
     ]
 
-    # Decrypt results
     aggregate_he_dec = [
         {
             'campaign': campaign,
@@ -271,4 +301,54 @@ def homomorphic_encryption_workflow(events, conversions):
         for (campaign, count) in aggregate_he_enc
     ]
 
-    return aggregate_he_dec
+    end_time_he = time.perf_counter()
+    he_exec_time = end_time_he - start_time_he
+
+    print(f"Execution time in seconds of encrypted workflow: {he_exec_time:.6f}")
+
+    # --------------------------
+    # 3. Comparison table (non-HE vs HE)
+    # --------------------------
+    df_comparison_he = pd.DataFrame([
+        (campaign, total_ref, total_dec['purchase_count'])
+        for ((campaign, total_ref), total_dec) in zip(aggregate_he_ref, aggregate_he_dec)
+    ], columns=["event_properties.promotion_name", "non-HE", "HE"])
+
+    # --------------------------
+    # 4. Plot comparison
+    # --------------------------
+    def plot_comparison_he(df):
+        x = np.arange(len(campaigns))
+        fig, ax = plt.subplots()
+        bar_width = 0.35
+        rects1 = ax.bar(x - bar_width/2, df['non-HE'], bar_width, label='non-HE')
+        rects2 = ax.bar(x + bar_width/2, df['HE'], bar_width, label='HE')
+        ax.set_ylabel('Conversion count')
+        ax.set_title('Conversion count for each campaign')
+        ax.set_xticks(x)
+        ax.set_xticklabels(campaigns)
+        ax.legend()
+        fig.tight_layout()
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png')
+        plt.close()
+        buf.seek(0)
+        img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+        return img_base64
+
+    plot_comparison_he(df_comparison_he)
+
+    # --------------------------
+    # 5. Return everything
+    # --------------------------
+    img_b64 = plot_comparison_he(df_comparison_he)
+
+    return {
+        "results_decrypted": aggregate_he_dec,
+        "comparison_table": df_comparison_he.to_dict(orient="records"),
+        "execution_time": {
+            "reference": ref_exec_time,
+            "encrypted": he_exec_time
+        },
+        "chart_base64": img_b64
+    }
