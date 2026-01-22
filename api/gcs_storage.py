@@ -8,7 +8,6 @@ from datetime import datetime
 from typing import List, Dict, Optional
 from dotenv import load_dotenv
 from google.cloud import storage
-from google.cloud import secretmanager
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -38,31 +37,14 @@ class GCSStorage:
     
     def _get_encryption_key(self) -> bytes:
         """
-        Get encryption key from Secret Manager or environment variable.
+        Get encryption key from environment variable.
         
         Returns:
             bytes: AES-256 encryption key (32 bytes)
         """
-        # Try Secret Manager first (production)
-        project_id = os.getenv("GCP_PROJECT_ID")
-        if project_id:
-            try:
-                secret_name = "encryption-key"
-                client = secretmanager.SecretManagerServiceClient()
-                name = f"projects/{project_id}/secrets/{secret_name}/versions/latest"
-                response = client.access_secret_version(request={"name": name})
-                key_str = response.payload.data.decode("UTF-8")
-                return base64.b64decode(key_str)
-            except Exception as e:
-                print(f"[WARN] Failed to fetch encryption key from Secret Manager: {e}")
-        
-        # Fallback to environment variable (local dev)
         key_str = os.getenv("ENCRYPTION_KEY")
         if not key_str:
-            raise ValueError(
-                "ENCRYPTION_KEY environment variable is required "
-                "(or set GCP_PROJECT_ID to use Secret Manager)"
-            )
+            raise ValueError("ENCRYPTION_KEY environment variable is required")
         
         try:
             return base64.b64decode(key_str)

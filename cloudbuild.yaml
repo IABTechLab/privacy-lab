@@ -47,9 +47,7 @@ steps:
         '--platform', 'managed',
         '--allow-unauthenticated',
         # Environment variables from Cloud Build substitutions
-        '--set-env-vars', 'GCS_BUCKET_NAME=$_GCS_BUCKET_NAME,GCP_PROJECT_ID=$_PROJECT_ID',
-        # Secrets from Secret Manager (sensitive values)
-        '--set-secrets', 'ENCRYPTION_KEY=encryption-key:latest'
+        '--set-env-vars', 'GCS_BUCKET_NAME=$_GCS_BUCKET_NAME,GCP_PROJECT_ID=$_PROJECT_ID,ENCRYPTION_KEY=$_ENCRYPTION_KEY'
       ]
     id: 'deploy'
     waitFor: ['push']
