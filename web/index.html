@@ -44,6 +44,22 @@
                     </label>
                 </div>
 
+                <div id="k-file-uploads" class="form-group" style="display: none;">
+                    <div class="file-upload-group">
+                        <label for="k-events-file">Events CSV File:</label>
+                        <input type="file" id="k-events-file" name="events" accept=".csv">
+                        <small>Format: space_id, email, event_type, campaign, region, opt_out</small>
+                    </div>
+                    <div class="file-upload-group">
+                        <label for="k-conversions-file">Conversions CSV File:</label>
+                        <input type="file" id="k-conversions-file" name="conversions" accept=".csv">
+                        <small>Format: space_id, email, event_type</small>
+                    </div>
+                    <div class="form-group">
+                        <a href="http://localhost:8000/api/download-templates" target="_blank" class="download-link">📥 Download CSV Templates</a>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn-primary">Run k-Anonymity</button>
             </form>
 
@@ -74,6 +90,22 @@
                     </label>
                 </div>
 
+                <div id="dp-file-uploads" class="form-group" style="display: none;">
+                    <div class="file-upload-group">
+                        <label for="dp-events-file">Events CSV File:</label>
+                        <input type="file" id="dp-events-file" name="events" accept=".csv">
+                        <small>Format: space_id, email, event_type, campaign, region, opt_out</small>
+                    </div>
+                    <div class="file-upload-group">
+                        <label for="dp-conversions-file">Conversions CSV File:</label>
+                        <input type="file" id="dp-conversions-file" name="conversions" accept=".csv">
+                        <small>Format: space_id, email, event_type</small>
+                    </div>
+                    <div class="form-group">
+                        <a href="http://localhost:8000/api/download-templates" target="_blank" class="download-link">📥 Download CSV Templates</a>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn-primary">Run Differential Privacy</button>
             </form>
 
@@ -91,6 +123,22 @@
                         <input type="checkbox" id="he-sample-data" name="use_sample_data" checked>
                         Use sample data
                     </label>
+                </div>
+
+                <div id="he-file-uploads" class="form-group" style="display: none;">
+                    <div class="file-upload-group">
+                        <label for="he-events-file">Events CSV File:</label>
+                        <input type="file" id="he-events-file" name="events" accept=".csv">
+                        <small>Format: space_id, email, event_type, campaign, region, opt_out</small>
+                    </div>
+                    <div class="file-upload-group">
+                        <label for="he-conversions-file">Conversions CSV File:</label>
+                        <input type="file" id="he-conversions-file" name="conversions" accept=".csv">
+                        <small>Format: space_id, email, event_type</small>
+                    </div>
+                    <div class="form-group">
+                        <a href="http://localhost:8000/api/download-templates" target="_blank" class="download-link">📥 Download CSV Templates</a>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn-primary">Run Homomorphic Encryption</button>

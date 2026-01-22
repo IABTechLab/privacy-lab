@@ -45,7 +45,11 @@ steps:
         '--image', 'us-central1-docker.pkg.dev/$_PROJECT_ID/privacy-lab-repo/privacy-lab-api:latest',
         '--region', 'us-central1',
         '--platform', 'managed',
-        '--allow-unauthenticated'
+        '--allow-unauthenticated',
+        # Environment variables from Cloud Build substitutions
+        '--set-env-vars', 'GCS_BUCKET_NAME=$_GCS_BUCKET_NAME,GCP_PROJECT_ID=$_PROJECT_ID',
+        # Secrets from Secret Manager (sensitive values)
+        '--set-secrets', 'ENCRYPTION_KEY=encryption-key:latest'
       ]
     id: 'deploy'
     waitFor: ['push']

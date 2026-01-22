@@ -1,6 +1,65 @@
 // API Configuration
 const API_BASE_URL = 'http://localhost:8000';
 
+// JWT Token - In production, this should be obtained from authentication service
+// For now, using localStorage or a configurable token
+function getJWTToken() {
+    // Try to get from localStorage first
+    const token = localStorage.getItem('jwt_token');
+    if (token) {
+        return token;
+    }
+    
+    // If not in localStorage, try to get from environment/config
+    // In production, this should come from your auth service
+    // For development, you can set it manually:
+    // localStorage.setItem('jwt_token', 'your-jwt-token-here');
+    
+    // Return null if no token found - API will return 401
+    return null;
+}
+
+// Helper function to make authenticated API calls
+async function authenticatedFetch(url, options = {}) {
+    const token = getJWTToken();
+    const headers = {
+        ...options.headers,
+    };
+    
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return fetch(url, {
+        ...options,
+        headers
+    });
+}
+
+// Check for stored files on page load
+async function checkStoredFiles() {
+    try {
+        const response = await authenticatedFetch(`${API_BASE_URL}/api/user/files`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.files && data.files.length > 0) {
+                console.log(`User has ${data.count} stored file(s)`);
+                // You can display this information in the UI if needed
+                // For example, show a notification or update a status indicator
+            }
+        } else if (response.status === 401) {
+            console.log('No valid JWT token found. Please authenticate.');
+        }
+    } catch (error) {
+        console.error('Error checking stored files:', error);
+    }
+}
+
+// Check stored files when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    checkStoredFiles();
+});
+
 // Tab functionality
 function openTab(evt, tabName) {
     const tabContents = document.getElementsByClassName('tab-content');
@@ -39,28 +98,54 @@ document.getElementById('epsilon-value').addEventListener('input', (e) => {
     document.getElementById('epsilon-value-display').textContent = e.target.value;
 });
 
+// Toggle file upload visibility based on sample data checkbox
+document.getElementById('k-sample-data').addEventListener('change', (e) => {
+    document.getElementById('k-file-uploads').style.display = e.target.checked ? 'none' : 'block';
+});
+
+document.getElementById('dp-sample-data').addEventListener('change', (e) => {
+    document.getElementById('dp-file-uploads').style.display = e.target.checked ? 'none' : 'block';
+});
+
+document.getElementById('he-sample-data').addEventListener('change', (e) => {
+    document.getElementById('he-file-uploads').style.display = e.target.checked ? 'none' : 'block';
+});
+
 // k-Anonymity Form Handler
 document.getElementById('k-anonymity-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     showLoading();
 
-    const formData = {
-        k: parseInt(document.getElementById('k-value').value),
-        supp_level: parseInt(document.getElementById('k-supp').value),
-        use_sample_data: document.getElementById('k-sample-data').checked
-    };
+    const useSampleData = document.getElementById('k-sample-data').checked;
+    let response;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/api/k-anonymity`, {
+        // Always use FormData for consistency
+        const formData = new FormData();
+        formData.append('k', document.getElementById('k-value').value);
+        formData.append('supp_level', document.getElementById('k-supp').value);
+        formData.append('use_sample_data', useSampleData ? 'true' : 'false');
+
+        if (!useSampleData) {
+            const eventsFile = document.getElementById('k-events-file').files[0];
+            const conversionsFile = document.getElementById('k-conversions-file').files[0];
+
+            if (!eventsFile || !conversionsFile) {
+                throw new Error('Please select both events and conversions CSV files');
+            }
+
+            formData.append('events', eventsFile);
+            formData.append('conversions', conversionsFile);
+        }
+
+        response = await authenticatedFetch(`${API_BASE_URL}/api/k-anonymity`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
+            body: formData
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorData = await response.json().catch(() => ({ detail: `HTTP error! status: ${response.status}` }));
+            throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
@@ -77,23 +162,36 @@ document.getElementById('dp-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     showLoading();
 
-    const formData = {
-        epsilon: parseFloat(document.getElementById('epsilon-value').value),
-        split_evenly_over: parseInt(document.getElementById('split-over').value),
-        use_sample_data: document.getElementById('dp-sample-data').checked
-    };
+    const useSampleData = document.getElementById('dp-sample-data').checked;
+    let response;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/api/differential-privacy`, {
+        // Always use FormData for consistency
+        const formData = new FormData();
+        formData.append('epsilon', document.getElementById('epsilon-value').value);
+        formData.append('split_evenly_over', document.getElementById('split-over').value);
+        formData.append('use_sample_data', useSampleData ? 'true' : 'false');
+
+        if (!useSampleData) {
+            const eventsFile = document.getElementById('dp-events-file').files[0];
+            const conversionsFile = document.getElementById('dp-conversions-file').files[0];
+
+            if (!eventsFile || !conversionsFile) {
+                throw new Error('Please select both events and conversions CSV files');
+            }
+
+            formData.append('events', eventsFile);
+            formData.append('conversions', conversionsFile);
+        }
+
+        response = await authenticatedFetch(`${API_BASE_URL}/api/differential-privacy`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
+            body: formData
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorData = await response.json().catch(() => ({ detail: `HTTP error! status: ${response.status}` }));
+            throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
@@ -110,21 +208,34 @@ document.getElementById('he-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     showLoading();
 
-    const formData = {
-        use_sample_data: document.getElementById('he-sample-data').checked
-    };
+    const useSampleData = document.getElementById('he-sample-data').checked;
+    let response;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/api/homomorphic-encryption`, {
+        // Always use FormData for consistency
+        const formData = new FormData();
+        formData.append('use_sample_data', useSampleData ? 'true' : 'false');
+
+        if (!useSampleData) {
+            const eventsFile = document.getElementById('he-events-file').files[0];
+            const conversionsFile = document.getElementById('he-conversions-file').files[0];
+
+            if (!eventsFile || !conversionsFile) {
+                throw new Error('Please select both events and conversions CSV files');
+            }
+
+            formData.append('events', eventsFile);
+            formData.append('conversions', conversionsFile);
+        }
+
+        response = await authenticatedFetch(`${API_BASE_URL}/api/homomorphic-encryption`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
+            body: formData
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorData = await response.json().catch(() => ({ detail: `HTTP error! status: ${response.status}` }));
+            throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
