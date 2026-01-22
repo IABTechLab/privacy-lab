@@ -1,17 +1,12 @@
 """
-GCS Storage utility module for encrypted file storage.
-Handles file encryption, upload to GCS, and file listing.
+GCS Storage utility module for file storage.
+Handles file upload to GCS and file listing.
 """
 import os
-import base64
 from datetime import datetime
 from typing import List, Dict, Optional
 from dotenv import load_dotenv
 from google.cloud import storage
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import io
 
 # Load environment variables from .env file if it exists
@@ -19,10 +14,10 @@ load_dotenv()
 
 
 class GCSStorage:
-    """Handles encrypted file storage in GCS."""
+    """Handles file storage in GCS."""
     
     def __init__(self):
-        """Initialize GCS storage client and encryption key."""
+        """Initialize GCS storage client."""
         # Get bucket name from environment
         self.bucket_name = os.getenv("GCS_BUCKET_NAME")
         if not self.bucket_name:
@@ -31,53 +26,6 @@ class GCSStorage:
         # Initialize GCS client (Cloud Functions automatically provide credentials)
         self.storage_client = storage.Client()
         self.bucket = self.storage_client.bucket(self.bucket_name)
-        
-        # Get encryption key
-        self.encryption_key = self._get_encryption_key()
-    
-    def _get_encryption_key(self) -> bytes:
-        """
-        Get encryption key from environment variable.
-        
-        Returns:
-            bytes: AES-256 encryption key (32 bytes)
-        """
-        key_str = os.getenv("ENCRYPTION_KEY")
-        if not key_str:
-            raise ValueError("ENCRYPTION_KEY environment variable is required")
-        
-        try:
-            return base64.b64decode(key_str)
-        except Exception:
-            # If not base64, treat as raw key and pad/truncate to 32 bytes
-            key_bytes = key_str.encode("utf-8")
-            if len(key_bytes) < 32:
-                # Pad with zeros
-                key_bytes = key_bytes + b"\0" * (32 - len(key_bytes))
-            elif len(key_bytes) > 32:
-                # Truncate
-                key_bytes = key_bytes[:32]
-            return key_bytes
-    
-    def encrypt_file(self, file_content: bytes) -> bytes:
-        """
-        Encrypt file content using AES-256-GCM.
-        
-        Args:
-            file_content: Raw file content to encrypt
-            
-        Returns:
-            bytes: Encrypted file content
-        """
-        # Generate a random nonce (12 bytes for GCM)
-        nonce = os.urandom(12)
-        
-        # Encrypt using AESGCM
-        aesgcm = AESGCM(self.encryption_key)
-        ciphertext = aesgcm.encrypt(nonce, file_content, None)
-        
-        # Prepend nonce to ciphertext (nonce + ciphertext)
-        return nonce + ciphertext
     
     def upload_file(
         self, 
@@ -87,7 +35,7 @@ class GCSStorage:
         original_filename: Optional[str] = None
     ) -> str:
         """
-        Encrypt and upload file to GCS.
+        Upload file to GCS.
         
         Args:
             user_id: User ID from JWT token
@@ -98,9 +46,6 @@ class GCSStorage:
         Returns:
             str: GCS object path
         """
-        # Encrypt file
-        encrypted_content = self.encrypt_file(file_content)
-        
         # Generate filename with timestamp
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         if original_filename:
@@ -115,9 +60,9 @@ class GCSStorage:
         
         # Upload to GCS
         blob = self.bucket.blob(blob_path)
-        blob.upload_from_string(encrypted_content, content_type="application/octet-stream")
+        blob.upload_from_string(file_content, content_type="text/csv")
         
-        print(f"[INFO] Uploaded encrypted file to GCS: {blob_path}")
+        print(f"[INFO] Uploaded file to GCS: {blob_path}")
         return blob_path
     
     def list_user_files(self, user_id: str) -> List[Dict[str, str]]:

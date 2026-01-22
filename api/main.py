@@ -80,7 +80,7 @@ try:
     print(f"[INFO] GCS Storage initialized successfully. Bucket: {gcs_storage.bucket_name}")
 except Exception as e:
     print(f"[WARN] GCS Storage initialization failed: {e}")
-    print(f"[WARN] File uploads to GCS will be skipped. Set GCS_BUCKET_NAME and ENCRYPTION_KEY environment variables.")
+    print(f"[WARN] File uploads to GCS will be skipped. Set GCS_BUCKET_NAME environment variable.")
     gcs_storage = None
 
 
