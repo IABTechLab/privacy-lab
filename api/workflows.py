@@ -288,7 +288,7 @@ def homomorphic_encryption_workflow(events, conversions):
                 count_p
                 for (_, _, campaign_, count_p, _) in join_he
                 if campaign == campaign_
-            ])
+            ], start=pailliers.encrypt(public_key, 0))  # Start with encrypted 0
         ]
         for campaign in campaigns
     ]
