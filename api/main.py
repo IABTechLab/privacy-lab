@@ -223,7 +223,9 @@ def read_root():
             "homomorphic_encryption": "/api/homomorphic-encryption",
             "sample_data": "/api/sample-data",
             "sample_data_info": "/api/sample-data-info?method={k-anonymity|differential}",
-            "download_templates": "/api/download-templates"
+            "download_templates": "/api/download-templates",
+            "user_files": "/api/user/files",
+            "user_files_check": "/api/user/files/check"
         }
     }
 
@@ -283,49 +285,82 @@ async def k_anonymity(
         if use_sample_data:
             events_data, conversions_data, campaigns = workflows.generate_sample_data()
         else:
-            if not events or not conversions:
-                raise HTTPException(status_code=400, detail="Both events and conversions CSV files are required.")
+            # Check if files are uploaded
+            if events and conversions:
+                # Files uploaded - store them in GCS and use them
+                if gcs_storage:
+                    try:
+                        print(f"[INFO] Storing files in GCS for user_id: {user_id}")
+                        # Read file content
+                        events.file.seek(0)
+                        events_content = await events.read()
+                        conversions.file.seek(0)
+                        conversions_content = await conversions.read()
+                        
+                        # Upload to GCS
+                        events_path = gcs_storage.upload_file(
+                            user_id=user_id,
+                            file_content=events_content,
+                            file_type="events",
+                            original_filename=events.filename
+                        )
+                        print(f"[INFO] Events file uploaded to: {events_path}")
+                        
+                        conversions_path = gcs_storage.upload_file(
+                            user_id=user_id,
+                            file_content=conversions_content,
+                            file_type="conversions",
+                            original_filename=conversions.filename
+                        )
+                        print(f"[INFO] Conversions file uploaded to: {conversions_path}")
+                        
+                        # Reset file pointers for parsing
+                        events.file.seek(0)
+                        conversions.file.seek(0)
+                    except Exception as e:
+                        print(f"[ERROR] Failed to store files in GCS: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        # Continue with processing even if storage fails
+                else:
+                    print(f"[WARN] GCS storage not available, skipping file upload")
 
-            # Store files in GCS before processing
-            if gcs_storage:
-                try:
-                    print(f"[INFO] Storing files in GCS for user_id: {user_id}")
-                    # Read file content
-                    events.file.seek(0)
-                    events_content = await events.read()
-                    conversions.file.seek(0)
-                    conversions_content = await conversions.read()
+                _, events_rows = parse_csv(events)
+                _, conversions_rows = parse_csv(conversions)
+            elif gcs_storage:
+                # No files uploaded - check if files exist in GCS (auto-delete expired)
+                print(f"[INFO] No files uploaded, checking GCS for user_id: {user_id}")
+                file_status = gcs_storage.check_files_exist(user_id, delete_expired=True)
+                
+                if file_status["events"] and file_status["conversions"]:
+                    print(f"[INFO] Fetching files from GCS for user_id: {user_id}")
+                    # Download files from GCS
+                    events_content = gcs_storage.download_file(user_id, "events")
+                    conversions_content = gcs_storage.download_file(user_id, "conversions")
                     
-                    # Upload to GCS
-                    events_path = gcs_storage.upload_file(
-                        user_id=user_id,
-                        file_content=events_content,
-                        file_type="events",
-                        original_filename=events.filename
+                    if not events_content or not conversions_content:
+                        raise HTTPException(status_code=400, detail="Failed to download files from GCS")
+                    
+                    # Parse downloaded files
+                    events_csv = events_content.decode("utf-8").strip()
+                    conversions_csv = conversions_content.decode("utf-8").strip()
+                    
+                    events_reader = csv.reader(io.StringIO(events_csv))
+                    events_rows_all = [row for row in events_reader if any(row)]
+                    events_rows = events_rows_all[1:] if events_rows_all else []
+                    
+                    conversions_reader = csv.reader(io.StringIO(conversions_csv))
+                    conversions_rows_all = [row for row in conversions_reader if any(row)]
+                    conversions_rows = conversions_rows_all[1:] if conversions_rows_all else []
+                    
+                    print(f"[INFO] Fetched {len(events_rows)} event rows and {len(conversions_rows)} conversion rows from GCS")
+                else:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail="No files uploaded and no files found in storage. Please upload events.csv and conversions.csv"
                     )
-                    print(f"[INFO] Events file uploaded to: {events_path}")
-                    
-                    conversions_path = gcs_storage.upload_file(
-                        user_id=user_id,
-                        file_content=conversions_content,
-                        file_type="conversions",
-                        original_filename=conversions.filename
-                    )
-                    print(f"[INFO] Conversions file uploaded to: {conversions_path}")
-                    
-                    # Reset file pointers for parsing
-                    events.file.seek(0)
-                    conversions.file.seek(0)
-                except Exception as e:
-                    print(f"[ERROR] Failed to store files in GCS: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    # Continue with processing even if storage fails
             else:
-                print(f"[WARN] GCS storage not available, skipping file upload")
-
-            _, events_rows = parse_csv(events)
-            _, conversions_rows = parse_csv(conversions)
+                raise HTTPException(status_code=400, detail="Both events and conversions CSV files are required.")
 
             if not all(len(r) == 6 for r in events_rows):
                 raise HTTPException(status_code=400, detail="Events CSV must have 6 columns")
@@ -336,6 +371,7 @@ async def k_anonymity(
             conversions_data = normalize_conversions(conversions_rows)
             print("event", events_data)
             print("conversion", conversions_data)
+            
         if not events_data or not conversions_data:
             raise HTTPException(status_code=400, detail="Parsed CSVs have no valid data rows")
 
@@ -373,49 +409,82 @@ async def differential_privacy(
         if use_sample_data:
             events_data, conversions_data, campaigns = workflows.generate_sample_data()
         else:
-            if not events or not conversions:
-                raise HTTPException(status_code=400, detail="Both events and conversions CSV files are required.")
+            # Check if files are uploaded
+            if events and conversions:
+                # Files uploaded - store them in GCS and use them
+                if gcs_storage:
+                    try:
+                        print(f"[INFO] Storing files in GCS for user_id: {user_id}")
+                        # Read file content
+                        events.file.seek(0)
+                        events_content = await events.read()
+                        conversions.file.seek(0)
+                        conversions_content = await conversions.read()
+                        
+                        # Upload to GCS
+                        events_path = gcs_storage.upload_file(
+                            user_id=user_id,
+                            file_content=events_content,
+                            file_type="events",
+                            original_filename=events.filename
+                        )
+                        print(f"[INFO] Events file uploaded to: {events_path}")
+                        
+                        conversions_path = gcs_storage.upload_file(
+                            user_id=user_id,
+                            file_content=conversions_content,
+                            file_type="conversions",
+                            original_filename=conversions.filename
+                        )
+                        print(f"[INFO] Conversions file uploaded to: {conversions_path}")
+                        
+                        # Reset file pointers for parsing
+                        events.file.seek(0)
+                        conversions.file.seek(0)
+                    except Exception as e:
+                        print(f"[ERROR] Failed to store files in GCS: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        # Continue with processing even if storage fails
+                else:
+                    print(f"[WARN] GCS storage not available, skipping file upload")
 
-            # Store files in GCS before processing
-            if gcs_storage:
-                try:
-                    print(f"[INFO] Storing files in GCS for user_id: {user_id}")
-                    # Read file content
-                    events.file.seek(0)
-                    events_content = await events.read()
-                    conversions.file.seek(0)
-                    conversions_content = await conversions.read()
+                _, events_rows = parse_csv(events)
+                _, conversions_rows = parse_csv(conversions)
+            elif gcs_storage:
+                # No files uploaded - check if files exist in GCS (auto-delete expired)
+                print(f"[INFO] No files uploaded, checking GCS for user_id: {user_id}")
+                file_status = gcs_storage.check_files_exist(user_id, delete_expired=True)
+                
+                if file_status["events"] and file_status["conversions"]:
+                    print(f"[INFO] Fetching files from GCS for user_id: {user_id}")
+                    # Download files from GCS
+                    events_content = gcs_storage.download_file(user_id, "events")
+                    conversions_content = gcs_storage.download_file(user_id, "conversions")
                     
-                    # Upload to GCS
-                    events_path = gcs_storage.upload_file(
-                        user_id=user_id,
-                        file_content=events_content,
-                        file_type="events",
-                        original_filename=events.filename
+                    if not events_content or not conversions_content:
+                        raise HTTPException(status_code=400, detail="Failed to download files from GCS")
+                    
+                    # Parse downloaded files
+                    events_csv = events_content.decode("utf-8").strip()
+                    conversions_csv = conversions_content.decode("utf-8").strip()
+                    
+                    events_reader = csv.reader(io.StringIO(events_csv))
+                    events_rows_all = [row for row in events_reader if any(row)]
+                    events_rows = events_rows_all[1:] if events_rows_all else []
+                    
+                    conversions_reader = csv.reader(io.StringIO(conversions_csv))
+                    conversions_rows_all = [row for row in conversions_reader if any(row)]
+                    conversions_rows = conversions_rows_all[1:] if conversions_rows_all else []
+                    
+                    print(f"[INFO] Fetched {len(events_rows)} event rows and {len(conversions_rows)} conversion rows from GCS")
+                else:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail="No files uploaded and no files found in storage. Please upload events.csv and conversions.csv"
                     )
-                    print(f"[INFO] Events file uploaded to: {events_path}")
-                    
-                    conversions_path = gcs_storage.upload_file(
-                        user_id=user_id,
-                        file_content=conversions_content,
-                        file_type="conversions",
-                        original_filename=conversions.filename
-                    )
-                    print(f"[INFO] Conversions file uploaded to: {conversions_path}")
-                    
-                    # Reset file pointers for parsing
-                    events.file.seek(0)
-                    conversions.file.seek(0)
-                except Exception as e:
-                    print(f"[ERROR] Failed to store files in GCS: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    # Continue with processing even if storage fails
             else:
-                print(f"[WARN] GCS storage not available, skipping file upload")
-
-            _, events_rows = parse_csv(events)
-            _, conversions_rows = parse_csv(conversions)
+                raise HTTPException(status_code=400, detail="Both events and conversions CSV files are required.")
 
             if not all(len(r) == 6 for r in events_rows):
                 raise HTTPException(status_code=400, detail="Events CSV must have 6 columns")
@@ -468,49 +537,82 @@ async def homomorphic_encryption(
         if use_sample_data:
             events_data, conversions_data, campaigns = workflows.generate_sample_data()
         else:
-            if not events or not conversions:
-                raise HTTPException(status_code=400, detail="Both events and conversions CSV files are required.")
+            # Check if files are uploaded
+            if events and conversions:
+                # Files uploaded - store them in GCS and use them
+                if gcs_storage:
+                    try:
+                        print(f"[INFO] Storing files in GCS for user_id: {user_id}")
+                        # Read file content
+                        events.file.seek(0)
+                        events_content = await events.read()
+                        conversions.file.seek(0)
+                        conversions_content = await conversions.read()
+                        
+                        # Upload to GCS
+                        events_path = gcs_storage.upload_file(
+                            user_id=user_id,
+                            file_content=events_content,
+                            file_type="events",
+                            original_filename=events.filename
+                        )
+                        print(f"[INFO] Events file uploaded to: {events_path}")
+                        
+                        conversions_path = gcs_storage.upload_file(
+                            user_id=user_id,
+                            file_content=conversions_content,
+                            file_type="conversions",
+                            original_filename=conversions.filename
+                        )
+                        print(f"[INFO] Conversions file uploaded to: {conversions_path}")
+                        
+                        # Reset file pointers for parsing
+                        events.file.seek(0)
+                        conversions.file.seek(0)
+                    except Exception as e:
+                        print(f"[ERROR] Failed to store files in GCS: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        # Continue with processing even if storage fails
+                else:
+                    print(f"[WARN] GCS storage not available, skipping file upload")
 
-            # Store files in GCS before processing
-            if gcs_storage:
-                try:
-                    print(f"[INFO] Storing files in GCS for user_id: {user_id}")
-                    # Read file content
-                    events.file.seek(0)
-                    events_content = await events.read()
-                    conversions.file.seek(0)
-                    conversions_content = await conversions.read()
+                _, events_rows = parse_csv(events)
+                _, conversions_rows = parse_csv(conversions)
+            elif gcs_storage:
+                # No files uploaded - check if files exist in GCS (auto-delete expired)
+                print(f"[INFO] No files uploaded, checking GCS for user_id: {user_id}")
+                file_status = gcs_storage.check_files_exist(user_id, delete_expired=True)
+                
+                if file_status["events"] and file_status["conversions"]:
+                    print(f"[INFO] Fetching files from GCS for user_id: {user_id}")
+                    # Download files from GCS
+                    events_content = gcs_storage.download_file(user_id, "events")
+                    conversions_content = gcs_storage.download_file(user_id, "conversions")
                     
-                    # Upload to GCS
-                    events_path = gcs_storage.upload_file(
-                        user_id=user_id,
-                        file_content=events_content,
-                        file_type="events",
-                        original_filename=events.filename
+                    if not events_content or not conversions_content:
+                        raise HTTPException(status_code=400, detail="Failed to download files from GCS")
+                    
+                    # Parse downloaded files
+                    events_csv = events_content.decode("utf-8").strip()
+                    conversions_csv = conversions_content.decode("utf-8").strip()
+                    
+                    events_reader = csv.reader(io.StringIO(events_csv))
+                    events_rows_all = [row for row in events_reader if any(row)]
+                    events_rows = events_rows_all[1:] if events_rows_all else []
+                    
+                    conversions_reader = csv.reader(io.StringIO(conversions_csv))
+                    conversions_rows_all = [row for row in conversions_reader if any(row)]
+                    conversions_rows = conversions_rows_all[1:] if conversions_rows_all else []
+                    
+                    print(f"[INFO] Fetched {len(events_rows)} event rows and {len(conversions_rows)} conversion rows from GCS")
+                else:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail="No files uploaded and no files found in storage. Please upload events.csv and conversions.csv"
                     )
-                    print(f"[INFO] Events file uploaded to: {events_path}")
-                    
-                    conversions_path = gcs_storage.upload_file(
-                        user_id=user_id,
-                        file_content=conversions_content,
-                        file_type="conversions",
-                        original_filename=conversions.filename
-                    )
-                    print(f"[INFO] Conversions file uploaded to: {conversions_path}")
-                    
-                    # Reset file pointers for parsing
-                    events.file.seek(0)
-                    conversions.file.seek(0)
-                except Exception as e:
-                    print(f"[ERROR] Failed to store files in GCS: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    # Continue with processing even if storage fails
             else:
-                print(f"[WARN] GCS storage not available, skipping file upload")
-
-            _, events_rows = parse_csv(events)
-            _, conversions_rows = parse_csv(conversions)
+                raise HTTPException(status_code=400, detail="Both events and conversions CSV files are required.")
 
             if not all(len(r) == 6 for r in events_rows):
                 raise HTTPException(status_code=400, detail="Events CSV must have 6 columns")
@@ -653,6 +755,51 @@ async def get_user_files(user_id: str = Depends(verify_token)):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error listing files: {str(e)}")
+
+
+@app.get("/api/user/files/check")
+async def check_user_files(user_id: str = Depends(verify_token)):
+    """
+    Check if events.csv and conversions.csv exist for the authenticated user
+    and are not expired (older than FILE_EXPIRY_HOURS).
+    
+    Automatically deletes expired files (older than configured expiry time).
+    
+    Returns:
+        JSON response indicating which files exist and are valid:
+        {
+            "has_files": bool,  # True if both files exist and are not expired
+            "events": bool,     # True if events.csv exists and is not expired
+            "conversions": bool # True if conversions.csv exists and is not expired
+        }
+    """
+    try:
+        print(f"[INFO] Checking files for user_id: {user_id}")
+        if not gcs_storage:
+            print(f"[WARN] GCS storage not configured for user_id: {user_id}")
+            return {
+                "has_files": False,
+                "events": False,
+                "conversions": False,
+                "message": "GCS storage not configured"
+            }
+        
+        # Check files and auto-delete if expired
+        file_status = gcs_storage.check_files_exist(user_id, delete_expired=True)
+        has_both = file_status["events"] and file_status["conversions"]
+        
+        print(f"[INFO] File status for user_id {user_id}: events={file_status['events']}, conversions={file_status['conversions']}")
+        
+        return {
+            "has_files": has_both,
+            "events": file_status["events"],
+            "conversions": file_status["conversions"]
+        }
+    except Exception as e:
+        print(f"[ERROR] Error checking user files for user_id {user_id}: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error checking files: {str(e)}")
 
 
 @app.get("/api/download-templates")
